@@ -1,8 +1,20 @@
-server:
-  host: "127.0.0.1"
-  port: 8080
+number:
+  title: "数字"
+  default: random
+  min: 0
+  max: 999999
 
-database:
-  url: "mysql://root:123456@localhost:3306/app"
+string:
+  title: "字符串"
+  default: random
   pool_size: 10
-  
+
+date:
+  title: "日期"
+  default: current
+
+timestamp:
+  default: current
+  title: "时间戳"
+
+

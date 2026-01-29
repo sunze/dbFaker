@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>新建数据集</title>
+</head>
+<body class="bg-[#f0f7f5] min-h-screen py-0 px-0">
+<!-- 顶部通用导航栏 -->
+<header class="bg-[#2a6a5d] text-white">
+    <div class="max-w-7xl mx-auto px-6 py-2 flex items-center">
+        <!-- Logo区域 -->
+        <div class="flex items-center gap-2 font-semibold text-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7" />
+            </svg>
+            <span>数据工具</span>
+        </div>
+        <!-- 导航选项：数据集高亮 -->
+        <nav class="flex items-center gap-6 ml-8">
+            <a href="/" class="px-2 py-1 text-[#cfeee0] hover:text-white transition border-b-2 border-transparent">数据生成</a>
+            <a href="dataset.html" class="px-2 py-1 text-white hover:text-[#cfeee0] transition border-b-2 border-white">数据集</a>
+        </nav>
+        <!-- 右侧功能按钮 -->
+        <div class="flex items-center gap-4 ml-auto">
+            <button class="text-white hover:text-[#cfeee0] transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+            </button>
+            <button class="text-white hover:text-[#cfeee0] transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- 主容器 -->
+<div class="max-w-7xl mx-auto bg-[#f8fcfb] rounded-xl shadow-sm border border-[#d1e9e4] overflow-hidden mt-6 mx-6">
+    <!-- 页面头部：新增返回按钮 -->
+    <div class="bg-[#f8fcfb] border-b border-[#d1e9e4] px-8 py-6 flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-[#1f4f46] flex items-center gap-3">
+            <div class="p-2 bg-[#e6f5f2] rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#1f4f46]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+            </div>
+            新建数据集
+        </h1>
+        <!-- 返回数据集管理 -->
+        <a href="dataset.html" class="flex items-center gap-2 text-[#2d5f56] hover:text-[#1f4f46] transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            返回数据集管理
+        </a>
+    </div>
+
+    <!-- 表单内容区 -->
+    <div class="px-8 py-10">
+        <div class="max-w-2xl mx-auto space-y-6">
+            <!-- 表单标题 -->
+            <h2 class="text-xl font-semibold text-[#1f4f46]">数据集信息</h2>
+
+            <!-- 名称输入项 -->
+            <div class="space-y-2">
+                <label for="dataset-name" class="block text-sm font-medium text-[#2d5f56]">名称 <span class="text-[#f56c6c]">*</span></label>
+                <input
+                        type="text"
+                        id="dataset-name"
+                        class="w-full border border-[#d1e9e4] rounded-md px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#5fb878]/20 focus:border-[#5fb878] transition"
+                        placeholder="输入数据集名称（如：用户信息数据集）"
+                        required
+                >
+            </div>
+
+            <!-- 文件选择项 -->
+            <div class="space-y-2">
+                <label for="dataset-file" class="block text-sm font-medium text-[#2d5f56]">文件 <span class="text-[#f56c6c]">*</span>（仅支持CSV）</label>
+                <div class="flex items-center">
+                    <input
+                            type="text"
+                            id="dataset-file"
+                            class="flex-1 border border-r-0 border-[#d1e9e4] rounded-l-md px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#5fb878]/20 focus:border-[#5fb878] transition"
+                            placeholder="未选择文件"
+                            readonly
+                    >
+                    <label
+                            for="file-upload"
+                            class="bg-[#5fb878] text-white font-medium px-4 py-2.5 rounded-r-md hover:bg-[#52a86d] transition cursor-pointer flex items-center gap-1"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        选择文件
+                    </label>
+                    <input
+                            type="file"
+                            id="file-upload"
+                            class="hidden"
+                            accept=".csv"
+                            onchange="document.getElementById('dataset-file').value = this.files[0]?.name || '未选择文件'"
+                            required
+                    >
+                </div>
+                <p class="text-xs text-[#6a988f]">提示：CSV文件请确保首行为列名，编码为UTF-8</p>
+            </div>
+
+            <!-- 提交按钮 -->
+            <button class="w-full bg-[#2a6a5d] text-white font-semibold px-4 py-2.5 rounded-md hover:bg-[#1f4f46] transition mt-4 flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                保存数据集
+            </button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

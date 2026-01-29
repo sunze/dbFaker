@@ -3,5 +3,5 @@ server:
   port: 8080
 
 database:
-  url: "mysql://root:123456@localhost:3306/app"
+  url: "mysql://testuser:stu1990@localhost:3306/dev"
   pool_size: 10
