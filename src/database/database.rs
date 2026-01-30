@@ -266,7 +266,8 @@ mod tests {
     fn test_dataset_all() -> Result<()>{
         // 初始化数据库
         let db = DatasetDb::init()?;
-        println!("所有数据: {:?}", db.get_all_datasets()?);
         Ok(())
     }
+
+
 }
