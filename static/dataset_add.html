@@ -2,6 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <title>新建数据集</title>
 </head>
@@ -60,65 +61,69 @@
     </div>
 
     <!-- 表单内容区 -->
-    <div class="px-8 py-10">
-        <div class="max-w-2xl mx-auto space-y-6">
-            <!-- 表单标题 -->
-            <h2 class="text-xl font-semibold text-[#1f4f46]">数据集信息</h2>
+    <form id="dataset-form" class="space-y-6">
+        <div class="px-8 py-10">
+            <div class="max-w-2xl mx-auto space-y-6">
+                <!-- 表单标题 -->
+                <h2 class="text-xl font-semibold text-[#1f4f46]">数据集信息</h2>
 
-            <!-- 名称输入项 -->
-            <div class="space-y-2">
-                <label for="dataset-name" class="block text-sm font-medium text-[#2d5f56]">名称 <span class="text-[#f56c6c]">*</span></label>
-                <input
-                        type="text"
-                        id="dataset-name"
-                        class="w-full border border-[#d1e9e4] rounded-md px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#5fb878]/20 focus:border-[#5fb878] transition"
-                        placeholder="输入数据集名称（如：用户信息数据集）"
-                        required
-                >
-            </div>
-
-            <!-- 文件选择项 -->
-            <div class="space-y-2">
-                <label for="dataset-file" class="block text-sm font-medium text-[#2d5f56]">文件 <span class="text-[#f56c6c]">*</span>（仅支持CSV）</label>
-                <div class="flex items-center">
+                <!-- 名称输入项 -->
+                <div class="space-y-2">
+                    <label for="dataset-name" class="block text-sm font-medium text-[#2d5f56]">名称 <span class="text-[#f56c6c]">*</span></label>
                     <input
+                            name="dataset_name"
                             type="text"
-                            id="dataset-file"
-                            class="flex-1 border border-r-0 border-[#d1e9e4] rounded-l-md px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#5fb878]/20 focus:border-[#5fb878] transition"
-                            placeholder="未选择文件"
-                            readonly
-                    >
-                    <label
-                            for="file-upload"
-                            class="bg-[#5fb878] text-white font-medium px-4 py-2.5 rounded-r-md hover:bg-[#52a86d] transition cursor-pointer flex items-center gap-1"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        选择文件
-                    </label>
-                    <input
-                            type="file"
-                            id="file-upload"
-                            class="hidden"
-                            accept=".csv"
-                            onchange="document.getElementById('dataset-file').value = this.files[0]?.name || '未选择文件'"
+                            id="dataset-name"
+                            class="w-full border border-[#d1e9e4] rounded-md px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#5fb878]/20 focus:border-[#5fb878] transition"
+                            placeholder="输入数据集名称（如：用户信息数据集）"
                             required
                     >
                 </div>
-                <p class="text-xs text-[#6a988f]">提示：CSV文件请确保首行为列名，编码为UTF-8</p>
-            </div>
 
-            <!-- 提交按钮 -->
-            <button class="w-full bg-[#2a6a5d] text-white font-semibold px-4 py-2.5 rounded-md hover:bg-[#1f4f46] transition mt-4 flex items-center justify-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                保存数据集
-            </button>
+                <!-- 文件选择项 -->
+                <div class="space-y-2">
+                    <label for="dataset-file" class="block text-sm font-medium text-[#2d5f56]">文件 <span class="text-[#f56c6c]">*</span>（仅支持CSV）</label>
+                    <div class="flex items-center">
+                        <input
+                                name="dataset_file"
+                                type="text"
+                                id="dataset-file"
+                                class="flex-1 border border-r-0 border-[#d1e9e4] rounded-l-md px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#5fb878]/20 focus:border-[#5fb878] transition"
+                                placeholder="未选择文件"
+                                readonly
+                        >
+                        <label
+                                for="file-upload"
+                                class="bg-[#5fb878] text-white font-medium px-4 py-2.5 rounded-r-md hover:bg-[#52a86d] transition cursor-pointer flex items-center gap-1"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            选择文件
+                        </label>
+                        <input
+                                type="file"
+                                id="file-upload"
+                                class="hidden"
+                                accept=".csv"
+                                onchange="document.getElementById('dataset-file').value = this.files[0]?.name || '未选择文件'"
+                                required
+                        >
+                    </div>
+                    <p class="text-xs text-[#6a988f]">提示：CSV文件请确保首行为列名，编码为UTF-8</p>
+                </div>
+
+                <!-- 提交按钮 -->
+                <button hx-post="/api/dataset_add" class="w-full bg-[#2a6a5d] text-white font-semibold px-4 py-2.5 rounded-md hover:bg-[#1f4f46] transition mt-4 flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    保存数据集
+                </button>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
 </body>
 </html>

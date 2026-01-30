@@ -6,7 +6,7 @@ use crate::types::conf::Config;
 use crate::types::rule::AllRules;
 
 #[get("/api/tables")]
-pub async fn index_tables_get() -> impl Responder {
+pub async fn api_tables_get() -> impl Responder {
     let pool = get_pool();
     let mut conn = pool.get_conn().expect("Failed to get connection");
     let tables: Vec<String> = conn
@@ -30,8 +30,24 @@ pub struct TableForm {
     table: String,
 }
 
+#[derive(serde::Deserialize)]
+pub struct DatasetAddForm {
+    dataset_name: String,
+    dataset_file: String,
+}
+
+
+#[post("/api/dataset_add")]
+pub async fn api_dataset_add(form: web::Form<DatasetAddForm>) -> impl Responder {
+
+    HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body("")
+}
+
+
 #[post("/api/table_info")]
-pub async fn table_info(form: web::Form<TableForm>) -> impl Responder {
+pub async fn api_table_info(form: web::Form<TableForm>) -> impl Responder {
     let msg = format!("你选择的表是：{}", form.table);
     let pool = get_pool();
     let mut conn = pool.get_conn().expect("Failed to get connection");

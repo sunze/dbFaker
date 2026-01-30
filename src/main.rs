@@ -1,12 +1,12 @@
 use std::env;
 use std::ops::Add;
-use actix_web::{App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use mysql::prelude::Queryable;
 use serde::Deserialize;
 use num::Complex;
 use text_colorizer::Colorize;
 use rand::Rng;
-use crate::controller::api::{index_tables_get, table_info};
+use crate::controller::api::{api_dataset_add, api_table_info, api_tables_get};
 use crate::controller::index::index_get;
 use crate::controller::dataset::{dataset_add, dataset_edit, dataset_get};
 pub mod spores;
@@ -37,16 +37,33 @@ async fn main() -> std::io::Result<()> {
     let index = "127.0.0.1:8081";
     println!("http://{}", index);
     HttpServer::new(|| App::new()
-        .service(index_get)
-        .service(dataset_get)
-        .service(dataset_add)
-        .service(dataset_edit)
-        .service(table_info)
-        .service(index_tables_get))
+        .configure(register_api_services)
+        .configure(register_index_services)
+        .configure(register_dataset_service))
         .bind(index)?
         .run()
         .await
 
+}
+
+
+fn register_api_services(cfg: &mut web::ServiceConfig) {
+    cfg
+        .service(api_tables_get)
+        .service(api_table_info)
+        .service(api_dataset_add)
+        ;
+}
+fn register_index_services(cfg: &mut web::ServiceConfig) {
+    cfg
+        .service(index_get);
+}
+
+fn register_dataset_service(cfg: &mut web::ServiceConfig) {
+    cfg
+        .service(dataset_get)
+        .service(dataset_add)
+        .service(dataset_edit);
 }
 
 //
