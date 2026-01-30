@@ -12,7 +12,7 @@ use uuid::Uuid;
 pub struct Dataset {
     pub id: String,          // 数据集唯一ID（UUID v4）
     pub name: String,        // 数据集名称（唯一）
-    pub file_path: Option<String>,  // CSV文件路径（可选，如：./uploads/user.csv）
+    pub set_type: String,    // 数据集类型（string/date/int）
     pub create_time: DateTime<Utc>, // 创建时间（UTC）
     pub update_time: DateTime<Utc>, // 最后更新时间（UTC）
 }
@@ -22,12 +22,11 @@ pub struct Dataset {
 pub struct DatasetItem {
     pub id: String,          // 内容项唯一ID（UUID v4）
     pub dataset_id: String,  // 关联的数据集ID（外键）
-    pub item_name: String,   // 内容项名称（如：用户ID、用户名）
-    pub item_type: String,   // 内容项类型（int/string/date/float）
+    pub item: String,   // 内容项名称（如：用户ID、用户名）
 }
 
 // -------------------------- 数据库常量定义 --------------------------
-const DB_DIR: &str = "./sled_dataset_db";  // Sled数据库存储目录
+const DB_DIR: &str = "./sled_db";  // Sled数据库存储目录
 const DATASET_TREE: &str = "datasets";     // 存储数据集的树（key: dataset_id, value: Dataset序列化后）
 const DATASET_ITEM_TREE: &str = "dataset_items";  // 存储内容项的树（key: dataset_id:item_id, value: DatasetItem序列化后）
 const DATASET_NAME_INDEX: &str = "dataset_name_index";  // 数据集名称索引树（key: name, value: dataset_id，保证名称唯一）
@@ -63,7 +62,7 @@ impl DatasetDb {
 
     // -------------------------- 数据集操作 --------------------------
     /// 新增数据集（返回数据集ID）
-    pub fn add_dataset(&self, name: &str, file_path: Option<&str>) -> Result<String> {
+    pub fn add_dataset(&self, name: &str, set_type: &str) -> Result<String> {
         // 1. 检查名称是否已存在（通过索引树）
         if self.name_index.contains_key(name)? {
             return Err(anyhow!("数据集名称“{}”已存在", name));
@@ -77,7 +76,7 @@ impl DatasetDb {
         let dataset = Dataset {
             id: dataset_id.clone(),
             name: name.to_string(),
-            file_path: file_path.map(|p| p.to_string()),
+            set_type: set_type.to_string(),
             create_time: now,
             update_time: now,
         };
@@ -85,7 +84,7 @@ impl DatasetDb {
         // 4. 序列化并存储（Sled支持事务，失败自动回滚）
         let dataset_bytes = serialize(&dataset)?;
         self.datasets.insert(&dataset_id, dataset_bytes)?;  // 存储数据集
-        self.name_index.insert(name, &dataset_id)?;         // 存储名称索引（保证唯一）
+        self.name_index.insert(name, dataset_id.as_str())?;         // 存储名称索引（保证唯一）
         self.db.flush()?;  // 强制刷盘（可选，Sled默认异步刷盘，重要数据建议手动刷盘）
 
         Ok(dataset_id)
@@ -136,7 +135,7 @@ impl DatasetDb {
 
     // -------------------------- 内容项操作 --------------------------
     /// 新增内容项（单个）
-    pub fn add_dataset_item(&self, dataset_id: &str, item_name: &str, item_type: &str) -> Result<String> {
+    pub fn add_dataset_item(&self, dataset_id: &str, item: &str) -> Result<String> {
         // 1. 检查数据集是否存在
         if !self.datasets.contains_key(dataset_id)? {
             return Err(anyhow!("数据集不存在"));
@@ -149,8 +148,7 @@ impl DatasetDb {
         let item = DatasetItem {
             id: item_id.clone(),
             dataset_id: dataset_id.to_string(),
-            item_name: item_name.to_string(),
-            item_type: item_type.to_string(),
+            item: item.to_string(),
         };
 
         // 4. 存储内容项（key格式：dataset_id:item_id，方便后续按数据集ID查询）
@@ -163,15 +161,15 @@ impl DatasetDb {
     }
 
     /// 批量新增内容项（效率更高，适合编辑页面批量保存）
-    pub fn batch_add_items(&self, dataset_id: &str, items: &[(String, String)]) -> Result<Vec<String>> {
-        // items: (item_name, item_type) 列表
+    pub fn batch_add_items(&self, dataset_id: &str, items: Vec<String>) -> Result<Vec<String>> {
+        // items列表
         if !self.datasets.contains_key(dataset_id)? {
             return Err(anyhow!("数据集不存在"));
         }
 
         let mut item_ids = Vec::with_capacity(items.len());
-        for (item_name, item_type) in items {
-            let item_id = self.add_dataset_item(dataset_id, item_name, item_type)?;
+        for item in &items {
+            let item_id = self.add_dataset_item(dataset_id, item)?;
             item_ids.push(item_id);
         }
 
@@ -224,7 +222,7 @@ mod tests {
         let db = DatasetDb::init()?;
 
         // 1. 新增数据集
-        let dataset_id = db.add_dataset("用户信息数据集", Some("./uploads/user.csv"))?;
+        let dataset_id = db.add_dataset("用户名数据集", "string")?;
         assert!(!dataset_id.is_empty());
         println!("新增数据集ID: {}", dataset_id);
 
@@ -232,16 +230,12 @@ mod tests {
         let dataset = db.get_dataset_by_id(&dataset_id)?;
         assert!(dataset.is_some());
         let dataset = dataset.unwrap();
-        assert_eq!(dataset.name, "用户信息数据集");
+        assert_eq!(dataset.name, "用户名数据集");
         println!("查询数据集: {:?}", dataset);
 
         // 3. 新增内容项（批量）
-        let items = vec![
-            ("用户ID".to_string(), "int".to_string()),
-            ("用户名".to_string(), "string".to_string()),
-            ("注册时间".to_string(), "date".to_string()),
-        ];
-        let item_ids = db.batch_add_items(&dataset_id, &items)?;
+        let items = vec!["用户名1".to_string(), "用户名2".to_string(), "用户名3".to_string()];
+        let item_ids = db.batch_add_items(&dataset_id, items)?;
         assert_eq!(item_ids.len(), 3);
         println!("新增内容项ID: {:?}", item_ids);
 
@@ -264,6 +258,15 @@ mod tests {
         assert!(items_after_delete.is_empty());
         println!("删除数据集成功");
 
+        Ok(())
+    }
+
+
+    #[test]
+    fn test_dataset_all() -> Result<()>{
+        // 初始化数据库
+        let db = DatasetDb::init()?;
+        println!("所有数据: {:?}", db.get_all_datasets()?);
         Ok(())
     }
 }
