@@ -1,0 +1,16 @@
+[
+  {
+    "name": "中文姓名",
+    "fields": [
+      "name",
+      "age"
+    ]
+  },
+  {
+    "name": "邮箱",
+    "fields": [
+      "name",
+      "age"
+    ]
+  }
+]

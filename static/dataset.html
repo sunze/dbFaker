@@ -2,6 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <title>数据集管理</title>
 </head>
@@ -61,88 +62,39 @@
 
     <!-- 数据集列表区 -->
     <div class="px-8 py-6">
-        <div class="overflow-x-auto">
-            <table class="w-full border-collapse">
-                <!-- 列表表头 -->
+        <div class="overflow-x-auto shadow-sm border border-[#e6f5f2] rounded-lg">
+            <table class="w-full text-left border-collapse bg-white">
                 <thead>
-                <tr class="bg-[#e6f5f2] text-[#1f4f46] text-sm font-semibold">
-                    <th class="px-6 py-3 text-left rounded-tl-lg">数据集名称</th>
-                    <th class="px-6 py-3 text-left">文件类型</th>
-                    <th class="px-6 py-3 text-left">上传时间</th>
-                    <th class="px-6 py-3 text-left rounded-tr-lg">操作</th>
+                <tr class="bg-[#f8fcfb] border-b border-[#d1e9e4] text-[#1f4f46] font-semibold text-sm">
+                    <th class="py-4 px-4">数据集名称</th>
+                    <th class="py-4 px-4">样本数量</th>
+                    <th class="py-4 px-4">最后更新</th>
+                    <th class="py-4 px-4">状态</th>
+                    <th class="py-4 px-4 text-right">操作</th>
                 </tr>
                 </thead>
-                <!-- 列表内容（模拟3条数据，可后续接口渲染） -->
-                <tbody class="text-[#2d5f56]">
-                <!-- 数据行1 -->
-                <tr class="border-b border-[#d1e9e4] hover:bg-[#f0f7f5] transition">
-                    <td class="px-6 py-4">用户信息数据集</td>
-                    <td class="px-6 py-4">CSV</td>
-                    <td class="px-6 py-4">2026-01-29 10:00</td>
-                    <td class="px-6 py-4 flex gap-3">
-                        <a href="dataset_edit.html?id=1" class="text-[#5fb878] hover:text-[#52a86d] transition flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h6m0 0h-6m0 14h6m0 0h-6m-6 0h6m0 0H5a2 2 0 01-2-2V7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5z" />
+                <tbody
+                        id="dataset-tbody"
+                        hx-get="/api/datasets"
+                        hx-trigger="load"
+                        hx-target="this"
+                        hx-swap="innerHTML"
+                        hx-on::after-request="if(event.detail.failed) alert('数据加载失败，请检查接口')"
+                        class="text-[#2d5f56] divide-y divide-[#eaf4f2]"
+                >
+                <tr>
+                    <td colspan="5" class="py-12 text-center">
+                        <div class="inline-flex items-center gap-2 text-gray-400">
+                            <svg class="animate-spin h-5 w-5 text-[#2a6a5d]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            编辑
-                        </a>
-                        <button class="text-[#f56c6c] hover:text-[#e64949] transition flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            删除
-                        </button>
-                    </td>
-                </tr>
-                <!-- 数据行2 -->
-                <tr class="border-b border-[#d1e9e4] hover:bg-[#f0f7f5] transition">
-                    <td class="px-6 py-4">商品数据明细表</td>
-                    <td class="px-6 py-4">CSV</td>
-                    <td class="px-6 py-4">2026-01-29 09:30</td>
-                    <td class="px-6 py-4 flex gap-3">
-                        <a href="dataset_edit.html?id=1" class="text-[#5fb878] hover:text-[#52a86d] transition flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h6m0 0h-6m0 14h6m0 0h-6m-6 0h6m0 0H5a2 2 0 01-2-2V7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5z" />
-                            </svg>
-                            编辑
-                        </a>
-                        <button class="text-[#f56c6c] hover:text-[#e64949] transition flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            删除
-                        </button>
-                    </td>
-                </tr>
-                <!-- 数据行3 -->
-                <tr class="hover:bg-[#f0f7f5] transition">
-                    <td class="px-6 py-4">订单交易数据集</td>
-                    <td class="px-6 py-4">CSV</td>
-                    <td class="px-6 py-4">2026-01-28 16:45</td>
-                    <td class="px-6 py-4 flex gap-3">
-                        <a href="dataset_add.html?id=3" class="text-[#5fb878] hover:text-[#52a86d] transition flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h6m0 0h-6m0 14h6m0 0h-6m-6 0h6m0 0H5a2 2 0 01-2-2V7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5z" />
-                            </svg>
-                            编辑
-                        </a>
-                        <button class="text-[#f56c6c] hover:text-[#e64949] transition flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            删除
-                        </button>
+                            加载中...
+                        </div>
                     </td>
                 </tr>
                 </tbody>
             </table>
-        </div>
-        <!-- 空数据占位（隐藏，可后续接口控制显示） -->
-        <div class="hidden flex-col items-center justify-center h-40 text-[#6a988f] mt-8">
-            <svg class="w-12 h-12 mb-3 text-[#d1e9e4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6M5 6h14M5 6v12a2 2 0 002 2h10a2 2 0 002-2V6"/>
-            </svg>
-            <p class="text-sm">暂无数据集，点击「新建数据集」添加</p>
         </div>
     </div>
 </div>

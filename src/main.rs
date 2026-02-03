@@ -1,248 +1,204 @@
-use std::env;
-use std::ops::Add;
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
-use mysql::prelude::Queryable;
-use serde::Deserialize;
-use num::Complex;
-use text_colorizer::Colorize;
-use rand::Rng;
-use crate::controller::api::{api_dataset_add, api_table_info, api_tables_get};
-use crate::controller::index::index_get;
-use crate::controller::dataset::{dataset_add, dataset_edit, dataset_get};
-pub mod spores;
-pub mod plant_structures;
-pub mod types;
-pub mod controller;
-pub mod sink;
-pub mod test;
-pub mod middleware;
-mod database;
+use std::fs;
+use std::io;
 
-#[derive(Debug)]
-struct Arguments {
-    target: String,
-    replacement: String,
-    filename: String,
-    output: String,
-}
-#[derive(Deserialize)]
-struct GcdParameters {
-    n: u64,
-    m: u64,
+use crossterm::{
+    event::{self, Event, KeyCode},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
+use fake::{Fake, Faker};
+use ratatui::{
+    backend::CrosstermBackend,
+    layout::{Constraint, Direction, Layout},
+    style::{Color, Modifier, Style},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
+    Terminal,
+};
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone)]
+struct Dataset {
+    name: String,
+    fields: Vec<String>,
 }
 
-
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    let index = "127.0.0.1:8081";
-    println!("http://{}", index);
-    HttpServer::new(|| App::new()
-        .configure(register_api_services)
-        .configure(register_index_services)
-        .configure(register_dataset_service))
-        .bind(index)?
-        .run()
-        .await
-
+enum Mode {
+    Normal,
+    Creating,
+    Preview(Vec<String>),
 }
 
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // ===== terminal init =====
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
 
-fn register_api_services(cfg: &mut web::ServiceConfig) {
-    cfg
-        .service(api_tables_get)
-        .service(api_table_info)
-        .service(api_dataset_add)
-        ;
-}
-fn register_index_services(cfg: &mut web::ServiceConfig) {
-    cfg
-        .service(index_get);
-}
-
-fn register_dataset_service(cfg: &mut web::ServiceConfig) {
-    cfg
-        .service(dataset_get)
-        .service(dataset_add)
-        .service(dataset_edit);
-}
-
-//
-// //#[actix_web::main]
-//  fn main() {
-//     let config = Config::new().expect("Failed to load config");
-//     let rule = AllRules::new().expect("Failed to load rule");
-//     //
-//
-//     println!("Server running at {}:{}", config.server.host, config.server.port);
-//     println!("DB url: {}", config.database.url);
-//
-//     let url = config.database.url;
-//     let opts = Opts::from_url(&url).expect("Invalid DB URL");
-//     let pool = Pool::new(opts).expect("Failed to create pool");
-//     let mut conn = pool.get_conn().expect("Failed to get connection");
-//     // 查询并打印表名
-//     let tables: Vec<String> = conn
-//         .query("SHOW TABLES")
-//         .expect("Failed to query tables");
-//
-//
-//     println!("DB tables: {:?}", tables);
-//
-//
-// }
-
-fn parse_args() -> Arguments {
-    let args: Vec<String> = env::args().skip(1).collect();
-    if args.len() != 4 {
-        print_usage();
-        eprintln!("{} wrong number of arguments: expected 4, got {}.",
-                  "Error:".red().bold(), args.len());
-        std::process::exit(1);
+    // ===== app state =====
+    let mut datasets = load_datasets();
+    let mut list_state = ListState::default();
+    if !datasets.is_empty() {
+        list_state.select(Some(0));
     }
-    Arguments {
-        target: args[0].clone(),
-        replacement: args[1].clone(),
-        filename: args[2].clone(),
-        output: args[3].clone()
-    }
-}
 
-fn print_usage() {
-    eprintln!("{} - change occurrences of one string into another",
-              "quickreplace".green());
-    eprintln!("Usage: quickreplace <target> <replacement> <INPUT> <OUTPUT>");
-}
+    let mut mode = Mode::Normal;
+    let mut input = String::new();
 
-async fn get_index() -> impl Responder {
-    HttpResponse::Ok()
-        .content_type("text/html")
-        .body(
-            r#"
-<title>GCD Calculator</title>
-<form action="/gcd" method="post">
-<input type="text" name="n"/>
-<input type="text" name="m"/>
-<button type="submit">Compute GCD</button>
-</form>
-"#,
-        )
-}
-
-fn gcd(mut n: u64, mut m: u64) -> u64 {
-    assert!(n != 0 && m != 0);
-    while m != 0 {
-        if m < n {
-            let t = m;
-            m = n;
-            n = t;
-        }
-        m = m % n;
-    }
-    n
-}
-
-fn complex_square_add_loop(c: Complex<f64>) {
-    let mut z = Complex { re: 0.0, im: 0.0 };
+    // ===== event loop =====
     loop {
-        z = z * z + c;
-    }
-}
+        terminal.draw(|f| {
+            let size = f.size();
 
+            match &mode {
+                Mode::Preview(rows) => {
+                    let text = rows.join("\n");
+                    let p = Paragraph::new(text)
+                        .block(
+                            Block::default()
+                                .title("Preview (ESC 返回)")
+                                .borders(Borders::ALL),
+                        );
+                    f.render_widget(p, size);
+                }
 
+                _ => {
+                    let chunks = Layout::default()
+                        .direction(Direction::Vertical)
+                        .constraints([Constraint::Percentage(80), Constraint::Percentage(20)])
+                        .split(size);
 
-#[derive(Deserialize)]
-struct FieldString {
-    min_length: usize,
-    max_length: usize,
-    chars: Vec<char>,
-}
+                    let items: Vec<ListItem> = datasets
+                        .iter()
+                        .map(|d| ListItem::new(d.name.clone()))
+                        .collect();
 
-impl FieldString {
-    fn new(min_length: usize, max_length: usize) -> FieldString {
-        let alphabet: Vec<char> = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().collect();
-        FieldString {
-            min_length,
-            max_length,
-            chars: alphabet,
+                    let list = List::new(items)
+                        .block(Block::default().title("Datasets").borders(Borders::ALL))
+                        .highlight_style(
+                            Style::default()
+                                .fg(Color::Yellow)
+                                .add_modifier(Modifier::BOLD),
+                        )
+                        .highlight_symbol(">> ");
+
+                    f.render_stateful_widget(list, chunks[0], &mut list_state);
+
+                    let hint = match mode {
+                        Mode::Creating => format!("输入数据集名称: {}", input),
+                        _ => "↑↓ 选择 | Enter 预览 | n 新建 | q 退出".to_string(),
+                    };
+
+                    let p = Paragraph::new(hint)
+                        .block(Block::default().borders(Borders::ALL));
+                    f.render_widget(p, chunks[1]);
+                }
+            }
+        })?;
+
+        if let Event::Key(key) = event::read()? {
+            match &mut mode {
+                Mode::Preview(_) => {
+                    if key.code == KeyCode::Esc {
+                        mode = Mode::Normal;
+                    }
+                }
+
+                Mode::Creating => match key.code {
+                    KeyCode::Enter => {
+                        if !input.is_empty() {
+                            datasets.push(Dataset {
+                                name: input.clone(),
+                                fields: vec!["name".into(), "age".into()],
+                            });
+                            save_datasets(&datasets);
+                            list_state.select(Some(datasets.len() - 1));
+                        }
+                        input.clear();
+                        mode = Mode::Normal;
+                    }
+                    KeyCode::Char(c) => input.push(c),
+                    KeyCode::Backspace => {
+                        input.pop();
+                    }
+                    KeyCode::Esc => {
+                        input.clear();
+                        mode = Mode::Normal;
+                    }
+                    _ => {}
+                },
+
+                Mode::Normal => match key.code {
+                    KeyCode::Char('q') => break,
+                    KeyCode::Char('n') => mode = Mode::Creating,
+
+                    KeyCode::Down => {
+                        if let Some(i) = list_state.selected() {
+                            if i + 1 < datasets.len() {
+                                list_state.select(Some(i + 1));
+                            }
+                        }
+                    }
+
+                    KeyCode::Up => {
+                        if let Some(i) = list_state.selected() {
+                            if i > 0 {
+                                list_state.select(Some(i - 1));
+                            }
+                        }
+                    }
+
+                    KeyCode::Enter => {
+                        if let Some(i) = list_state.selected() {
+                            if let Some(ds) = datasets.get(i) {
+                                mode = Mode::Preview(generate_preview(ds));
+                            }
+                        }
+                    }
+
+                    _ => {}
+                },
+            }
         }
     }
+
+    // ===== restore terminal =====
+    disable_raw_mode()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    Ok(())
 }
 
-#[derive(Deserialize)]
-struct FieldInteger {
-    min: i64,
-    max: i64,
-}
+// ===== fake preview =====
+fn generate_preview(dataset: &Dataset) -> Vec<String> {
+    let mut rows = Vec::new();
 
-#[derive(Deserialize)]
-struct FieldEmail {
-
-}
-
-
-fn fake_string(field: FieldString) -> String {
-    let mut rng = rand::rng();
-    let length = rng.random_range(field.min_length..=field.max_length);
-    let mut result = String::with_capacity(length);
-    for _ in 0..length {
-        let idx = rng.random_range(0..field.chars.len());
-        result.push(field.chars[idx]);
+    for _ in 0..5 {
+        let mut row = String::new();
+        for field in &dataset.fields {
+            let value = match field.as_str() {
+                "name" => Faker.fake::<String>(),
+                "age" => Faker.fake::<u8>().to_string(),
+                _ => "N/A".into(),
+            };
+            row.push_str(&format!("{}={}  ", field, value));
+        }
+        rows.push(row);
     }
-    result
+    rows
 }
 
-fn fake_int(field: FieldInteger) -> i64 {
-    let mut rng = rand::rng();
-    rng.random_range(field.min..=field.max)
+// ===== storage =====
+fn save_datasets(datasets: &Vec<Dataset>) {
+    let _ = fs::write(
+        "datasets.json",
+        serde_json::to_string_pretty(datasets).unwrap(),
+    );
 }
 
-fn fake_email(field: FieldEmail) -> String {
-    let domains = vec![
-        "gmail.com",
-        "qq.com",
-        "163.com",
-        "outlook.com",
-        "yahoo.com",
-        "hotmail.com",
-        "yandex.com",
-        "mail.ru",
-        "aol.com",
-        "icloud.com",
-        "live.com",
-        "zoho.com",
-        "protonmail.com",
-        "fastmail.com",
-        "gmx.com",
-        "mail.com",
-     ];
-    let mut rng = rand::rng();
-    let domain = domains[rng.random_range(0..domains.len())];
-    let mut result = "test".to_string();
-    result.push_str("@");
-    result.push_str(domain);
-    result
-}
-
-#[test]
-fn test_fake_email() {
-    let field = FieldEmail{};
-    let s = fake_email(field);
-    println!("随机字符串：{}", s)
-}
-
-#[test]
-fn test_fake_string_length() {
-    let field = FieldString::new(6, 10);
-    let s = fake_string(field);
-    assert!(s.len() >= 6 && s.len() <= 10, "长度不在范围内");
-    println!("随机字符串：{}", s)
-
-}
-
-#[test]
-fn test_fake_int() {
-    let field = FieldInteger {min: 1, max: 100};
-    let n = fake_int(field);
-    assert!(n >= 1 && n <= 100, "不在范围内");
-    println!("随机整数：{}", n)
+fn load_datasets() -> Vec<Dataset> {
+    fs::read_to_string("datasets.json")
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default()
 }
